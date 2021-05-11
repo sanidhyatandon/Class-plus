@@ -9,17 +9,20 @@ const defaultValues = {
 const appPath = 'https://www.flickr.com/services/rest/';
 
 const apiKey = '83a1eebf8fe298813824d11d885af847';
-
-//www.flickr.com/services/rest/?method=flickr.photos.getRecent&api_key=83a1eebf8fe298813824d11d885af847&per_page=10&page=1&format=json&nojsoncallback=1
-
-https: const config = {
+const config = {
   // Current User
   getPhotos: {
     ...defaultValues,
     url: `${appPath}?method=flickr.photos.getRecent&api_key=${apiKey}`
   },
-  getImage: {},
-  searchPhotos: {}
+  getImage: {
+    ...defaultValues,
+    url: `https://live.staticflickr.com`
+  },
+  searchPhotos: {
+    ...defaultValues,
+    url: `${appPath}?method=flickr.photos.search&api_key=${apiKey}`
+  }
 };
 
 export default config;
