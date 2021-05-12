@@ -49,7 +49,7 @@ const Photos = () => {
         .then(response => response.json())
         .then(photoList => setPhotos(photoList))
         .catch(error => console.log(error));
-    }, 1000),
+    }, 2000),
     [searchTerm]
   );
 
