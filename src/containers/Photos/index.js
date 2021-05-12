@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import apiConfig from '../../api.config';
 import PhotoView from '../../components/Photos';
-import { debounce } from '../../common/utilities';
+import { debounce, throttle } from '../../common/utilities';
 
 const Photos = () => {
   const [photos, setPhotos] = useState([]);
@@ -13,15 +13,18 @@ const Photos = () => {
 
   const resultsRef = useRef(null);
 
+  const handleScroll = () => {
+    if (
+      resultsRef.current &&
+      window.pageYOffset + window.innerHeight > resultsRef.current.clientHeight - window.outerHeight * 0.3
+    ) {
+      setPage(page => page + 1);
+    }
+  };
+
   useEffect(() => {
-    resultsRef.current.addEventListener('scroll', () => {
-      if (
-        resultsRef.current &&
-        window.pageYOffset + window.innerHeight > resultsRef.current.clientHeight - window.outerHeight * 0.3
-      ) {
-        setPage(page => page + 1);
-      }
-    });
+    resultsRef.current.addEventListener('scroll', throttle(handleScroll, 1000));
+    return () => window.removeEventListener('scroll', throttle(handleScroll, 1000));
   }, []);
 
   useEffect(() => {
@@ -34,28 +37,38 @@ const Photos = () => {
       .catch(error => console.log(error));
   }, [page]);
 
-  const searchPhotos = () => {
+  const debouncedCount = useCallback(
+    debounce(() => {
+      const {
+        searchPhotos: { url: searchPhotosURL }
+      } = apiConfig;
+
+      console.log(searchTerm, 'searchTerm');
+
+      fetch(`${searchPhotosURL}&per_page=10&text=${searchTerm}&format=json&nojsoncallback=1`)
+        .then(response => response.json())
+        .then(photoList => setPhotos(photoList))
+        .catch(error => console.log(error));
+    }, 1000),
+    [searchTerm]
+  );
+
+  const handleSearch = event => {
+    setSearchTerm(event.target.value);
+    if (searchTerm.length >= 3) {
+      debouncedCount();
+    }
+  };
+
+  useEffect(() => {
     const {
-      searchPhotos: { url: searchPhotosURL }
+      getPhotos: { url: getPhotosURL }
     } = apiConfig;
-    fetch(`${searchPhotosURL}&per_page=10&text=${searchTerm}&format=json&nojsoncallback=1`)
+    fetch(`${getPhotosURL}&per_page=10&page=${page}&format=json&nojsoncallback=1`)
       .then(response => response.json())
       .then(photoList => setPhotos(photoList))
       .catch(error => console.log(error));
-  };
-
-  const debouncedSearch = useCallback(() => {
-    return debounce(searchPhotos, 2000);
-  });
-
-  const handleSearch = event => {
-    const { value } = event.target;
-    setSearchTerm(value);
-
-    if (value.length >= 3) {
-      debouncedSearch();
-    }
-  };
+  }, [page]);
 
   const handleModalClose = () => {
     setIsOpen(false);

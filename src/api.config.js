@@ -1,5 +1,3 @@
-const MOCK_SERVICE = 'https://my-json-server.typicode.com/sanidhyatandon/blustacks-server';
-
 const defaultValues = {
   retry: 0,
   interval: 0,
